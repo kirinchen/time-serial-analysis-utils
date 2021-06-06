@@ -1,4 +1,4 @@
-const rMap = require('./serial-test-data').data;
+const rMap = require('./serial-test-data-all-down').data;
 
 const peakMaxWaitSeconds = 60 * 60 * 2.5;
 const positive = false;
@@ -12,17 +12,7 @@ let keys = Object.keys(rMap);
 keys = keys.reverse();
 
 
-function getOverPeakInfo() {
-    let firstKey = keys[0];
-    let firstv = rMap[firstKey];
-    let md = positive ? findMax() : findMin();
-    console.log(md);
-    let fat = new Date(firstKey);
-    let mat = new Date(md.time);
-    let stsecs = (fat - mat) / 1000;
-    return stsecs <= peakMaxWaitSeconds;
 
-}
 
 function listMinMax() {
     let ans = {
@@ -33,11 +23,27 @@ function listMinMax() {
         mmr = findMinOrMax(i);
         if (mmr == MINED) {
             ans.min.push(genMinMax(i));
-        } else if (mmr == MAXED){
+        } else if (mmr == MAXED) {
             ans.max.push(genMinMax(i));
         }
     }
     return ans;
+}
+
+function getNearInfo(list) {
+    let fkey = keys[0];
+    let nt = Number.MAX_SAFE_INTEGER;
+    let ans = null;
+    for (const e of list) {
+        key = e.key;
+        let tr = subtractKey(fkey, key);
+        if (tr < nt) {
+            nt = tr;
+            ans = e;
+        }
+    }
+    return ans;
+
 }
 
 function genMinMax(i) {
@@ -90,20 +96,37 @@ function subtractKey(k1, k2) {
 
 
 
-function findMax(key) {
-    let tAt = null;
-    let curv = Number.MIN_SAFE_INTEGER
-    for (const key of keys) {
-        let v = rMap[key];
-        if (v > curv) {
-            curv = v;
-            tAt = key;
-        }
-    }
-    return {
-        v: curv,
-        time: tAt
+const firstKey = keys[0];
+const minMaxInfo = listMinMax();
+const nearMax = getNearInfo(minMaxInfo.max);
+const nearMin = getNearInfo(minMaxInfo.min);
+console.log(nearMax);
+console.log(nearMin);
+
+const maxNearTime = subtractKey(firstKey, nearMax.key);
+const minNearTime = subtractKey(firstKey, nearMin.key);
+
+const STATE_RISE = 'RISE';
+const STATE_FALL = 'FALL';
+
+function calcState() {
+    if (maxNearTime < minNearTime) {
+        return maxNearTime > peakMaxWaitSeconds ? STATE_FALL : STATE_RISE;
+    } else {
+        return minNearTime > peakMaxWaitSeconds ? STATE_RISE : STATE_FALL;
     }
 }
 
-listMinMax();
+const state = calcState();
+
+console.log(state);
+
+const ans= {
+    state : state,
+    maxNearTime:maxNearTime,
+    minNearTime:minNearTime,
+    nearMax:nearMax,
+
+
+
+}
