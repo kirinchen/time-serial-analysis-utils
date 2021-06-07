@@ -1,7 +1,6 @@
-const rMap = require('./serial-test-data-all-down').data;
+const rMap = require('./serial-test-data').data;
 
-const peakMaxWaitSeconds = 60 * 60 * 2.5;
-const positive = false;
+const peakMaxWaitSeconds = 60 * 60 * 2;
 
 const MINED = 99;
 const MAXED = 66;
@@ -11,15 +10,12 @@ let keys = Object.keys(rMap);
 
 keys = keys.reverse();
 
-
-
-
 function listMinMax() {
     let ans = {
         min: [],
         max: []
     };
-    for (let i = 1; i < keys.length; i++) {
+    for (let i = 0; i < keys.length; i++) {
         mmr = findMinOrMax(i);
         if (mmr == MINED) {
             ans.min.push(genMinMax(i));
@@ -35,7 +31,7 @@ function getNearInfo(list) {
     let nt = Number.MAX_SAFE_INTEGER;
     let ans = null;
     for (const e of list) {
-        key = e.key;
+        let key = e.key;
         let tr = subtractKey(fkey, key);
         if (tr < nt) {
             nt = tr;
@@ -56,7 +52,6 @@ function genMinMax(i) {
 
 
 function findMinOrMax(idx) {
-    if (idx == 0) throw new Error('not put first idx');
     const curIdx = idx;
     const curKey = keys[idx];
     const curv = rMap[curKey];
@@ -117,16 +112,26 @@ function calcState() {
     }
 }
 
+
+
+
 const state = calcState();
 
 console.log(state);
+
+function getOtherNearPeak(){
+    if (nearMax.idx == 0) return nearMin;
+    if (nearMin.idx == 0) return nearMax;
+    return state == STATE_FALL ? nearMin : nearMax;
+}
 
 const ans= {
     state : state,
     maxNearTime:maxNearTime,
     minNearTime:minNearTime,
     nearMax:nearMax,
-
-
-
+    nearMin:nearMin,
+    nearPeak: getOtherNearPeak()
 }
+console.log(ans);
+ans;
