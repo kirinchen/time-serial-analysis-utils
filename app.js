@@ -1,4 +1,4 @@
-const rMap = require('./serial-test-data').data;
+const rMap = require('./serial-test-data-40h').data;
 
 const peakMaxWaitSeconds = 60 * 60 * 2;
 const STATE_RISE = 'RISE';
@@ -104,8 +104,8 @@ function genTrendInfo(micro) {
     const minMaxInfo = listMinMax(micro);
     const nearMax = getNearInfo(minMaxInfo.max);
     const nearMin = getNearInfo(minMaxInfo.min);
-    const maxNearTime = subtractKey(firstKey, nearMax.key);
-    const minNearTime = subtractKey(firstKey, nearMin.key);
+    const maxNearTime = nearMax ? subtractKey(firstKey, nearMax.key):Number.MAX_SAFE_INTEGER;
+    const minNearTime = nearMin ? subtractKey(firstKey, nearMin.key):Number.MAX_SAFE_INTEGER;
     console.log(nearMax);
     console.log(nearMin);
     const state = calcState();
@@ -122,8 +122,8 @@ function genTrendInfo(micro) {
 
 
     function getOtherNearPeak() {
-        if (nearMax.idx == 0) return nearMin;
-        if (nearMin.idx == 0) return nearMax;
+        if (nearMax && nearMax.idx == 0) return nearMin;
+        if (nearMin && nearMin.idx == 0) return nearMax;
         return state == STATE_FALL ? nearMin : nearMax;
     }
 
@@ -143,7 +143,11 @@ function genTrendInfo(micro) {
 
 const ans = {
     micro : genTrendInfo(true),
-    macro: genTrendInfo(false)
+    macro: genTrendInfo(false),
+    last:{
+        time:firstKey,
+        val:rMap[firstKey]
+    }
 }
 ans;
 console.log(ans);
