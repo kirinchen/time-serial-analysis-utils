@@ -1,4 +1,4 @@
-const rMap = require('./serial-test-data-40h').data;
+const rMap = require('./serial-test-data-202106121050').data;
 
 const peakMaxWaitSeconds = 60 * 60 * 2;
 const STATE_RISE = 'RISE';
@@ -15,14 +15,18 @@ const firstKey = keys[0];
 function listMinMax(micro) {
     let ans = {
         min: [],
-        max: []
+        max: [],
+        all:[]
     };
     for (let i = 0; i < keys.length; i++) {
-        mmr = findMinOrMax(i,micro);
+        let mmr = findMinOrMax(i,micro);
+        let info = genMinMax(i)
         if (mmr == MINED) {
-            ans.min.push(genMinMax(i));
+            ans.min.push(info);
+            ans.all.push(info);
         } else if (mmr == MAXED) {
-            ans.max.push(genMinMax(i));
+            ans.max.push(info);
+            ans.all.push(info);
         }
     }
     return ans;
@@ -61,6 +65,18 @@ function mapInfos(listi){
     return ans;
 }
 
+function isBoundary(timeSize,idx,micro,forward){
+    if(idx<0) return true;
+    if(idx >= keys.length) return true;
+    if(micro && timeSize > peakMaxWaitSeconds) return true;
+    if(micro) return false;
+    let nidx = forward ? idx-1 : idx +1;
+    if(nidx<0) return true;
+    if(nidx >= keys.length) return true;   
+    let cv = rMap[keys[idx]];
+    let nv = rMap[keys[nidx]];
+    return nv * cv < 0;
+}
 
 function findMinOrMax(idx, micro) {
     const curIdx = idx;
@@ -73,12 +89,13 @@ function findMinOrMax(idx, micro) {
         let nk = keys[idx];
         let nv = rMap[nk];
         let timeSize = Math.abs(subtractKey(curKey, nk));
-        if (timeSize > peakMaxWaitSeconds || idx < 0 || idx >= keys.length) {
+        if ( isBoundary(timeSize,idx,micro,forward) ) {
             if (forward) {
                 idx = curIdx;
                 forward = false;
                 continue;
             }
+            
             break;
         }
         if (maxed) {
@@ -88,7 +105,7 @@ function findMinOrMax(idx, micro) {
             if (nv < curv) mined = false
         }
     }
-    if (maxed && mined) throw new Error('its imposible maxed and mined curv=' + curv + ' idx:' + idx);
+    if (maxed && mined) return NONE;
     if (maxed && (micro || curv > 0)) return MAXED;
     if (mined && (micro || curv < 0)) return MINED;
     return NONE;
@@ -131,6 +148,7 @@ function genTrendInfo(micro) {
         state: state,
         maxList: mapInfos(minMaxInfo.max),
         minList: mapInfos(minMaxInfo.min),
+        allList: mapInfos(minMaxInfo.all),
         maxNearTime: maxNearTime,
         minNearTime: minNearTime,
         nearMax: nearMax,
@@ -138,8 +156,6 @@ function genTrendInfo(micro) {
         nearPeak: getOtherNearPeak()
     };
 }
-
-
 
 const ans = {
     micro : genTrendInfo(true),
@@ -149,5 +165,7 @@ const ans = {
         val:rMap[firstKey]
     }
 }
-ans;
+
 console.log(ans);
+
+ans;
