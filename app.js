@@ -1,6 +1,8 @@
 const rMap = require('./serial-test-data-202106121050').data;
-
+let baseVal = require('./serial-test-data-202106121050').baseVal;
 const peakMaxWaitSeconds = 60 * 60 * 2;
+
+baseVal = baseVal ? baseVal : 0;
 const STATE_RISE = 'RISE';
 const STATE_FALL = 'FALL';
 const MINED = 99;
@@ -65,6 +67,10 @@ function mapInfos(listi){
     return ans;
 }
 
+function getVal(key){
+    return rMap[key] -baseVal ;
+}
+
 function isBoundary(timeSize,idx,micro,forward){
     if(idx<0) return true;
     if(idx >= keys.length) return true;
@@ -73,21 +79,21 @@ function isBoundary(timeSize,idx,micro,forward){
     let nidx = forward ? idx-1 : idx +1;
     if(nidx<0) return true;
     if(nidx >= keys.length) return true;   
-    let cv = rMap[keys[idx]];
-    let nv = rMap[keys[nidx]];
+    let cv = getVal(keys[idx]) ;
+    let nv = getVal(keys[nidx]);
     return nv * cv < 0;
 }
 
 function findMinOrMax(idx, micro) {
     const curIdx = idx;
     const curKey = keys[idx];
-    const curv = rMap[curKey];
+    const curv = getVal(curKey);
     let maxed = true, mined = true;
     let forward = true;
     while (maxed || mined) {
         if (forward) idx--; else idx++;
         let nk = keys[idx];
-        let nv = rMap[nk];
+        let nv = getVal(nk);
         let timeSize = Math.abs(subtractKey(curKey, nk));
         if ( isBoundary(timeSize,idx,micro,forward) ) {
             if (forward) {
