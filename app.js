@@ -1,5 +1,5 @@
-const rMap = require('./serial-test-data-202106121050').data;
-let baseVal = require('./serial-test-data-202106121050').baseVal;
+const rMap = require('./serial-test-data-little-peak').data;
+let baseVal = require('./serial-test-data-little-peak').baseVal;
 const peakMaxWaitSeconds = 60 * 60 * 2;
 
 baseVal = baseVal ? baseVal : 0;
