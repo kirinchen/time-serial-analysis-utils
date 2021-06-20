@@ -1,6 +1,7 @@
-const rMap = require('./serial-test-data-little-peak').data;
-let baseVal = require('./serial-test-data-little-peak').baseVal;
+const rMap = require('./serial-test-data').data;
+let baseVal = require('./serial-test-data').baseVal;
 const peakMaxWaitSeconds = 60 * 60 * 2;
+const macroAmplitudeRate = 0.2;
 
 baseVal = baseVal ? baseVal : 0;
 const STATE_RISE = 'RISE';
@@ -124,8 +125,8 @@ function subtractKey(k1, k2) {
     return (k1t - k2t) / 1000;
 }
 
-function genTrendInfo(micro) {
-    const minMaxInfo = listMinMax(micro);
+function genTrendInfo(micro, ft = null) {
+    const minMaxInfo = listMinMax(micro, ft);
     const nearMax = getNearInfo(minMaxInfo.max);
     const nearMin = getNearInfo(minMaxInfo.min);
     const maxNearTime = nearMax ? subtractKey(firstKey, nearMax.key) : Number.MAX_SAFE_INTEGER;
@@ -164,9 +165,79 @@ function genTrendInfo(micro) {
     };
 }
 
+function macroAmplitudeFilter(iArrays) {
+    let sidx = 0;
+    while (sidx < iArrays.all.length) {
+        let list = iArrays.all;
+        let rmList = listAmplitudeSmall(sidx, list);
+        for(let rmv of rmList){
+            removeByIdx(iArrays.all,rmv.idx);
+            removeByIdx(iArrays.min,rmv.idx);
+            removeByIdx(iArrays.max,rmv.idx);
+        }
+        sidx++;
+    }
+    return iArrays;
+}
+
+function removeByIdx(list,idx){
+    let index = list.findIndex(e=> e.idx == idx);
+    if(index<0) return;
+    list.splice(index, 1);
+}
+
+function listAmplitudeSmall(idx, list) {
+    let ans = [];
+    const curV = Math.abs(list[idx].val);
+    let forward = true, later = true;
+
+    for (let i = 1; i < list.length; i++) {
+        let fr = getRmForward(i);
+        let lr = getRmLater(i);
+        if (fr) ans.push(fr);
+        if (lr) ans.push(lr);
+    }
+
+    return ans;
+
+    function getRmForward(pidx) {
+        if (!forward) return null;
+        let fidx = idx - pidx;
+        if (fidx < 0) {
+            forward = false;
+            return null;
+        }
+        return checkOveAmplitudeRate(fidx);
+    }
+
+    function getRmLater(pidx) {
+        if (!later) return null;
+        let fidx = idx + pidx;
+        if (fidx >= list.length) {
+            later = false;
+            return null;
+        }
+        return checkOveAmplitudeRate(fidx);
+
+    }
+
+    function checkOveAmplitudeRate(fidx) {
+        const tv = Math.abs(list[fidx].val);
+        const r = tv / curV;
+        if (r > macroAmplitudeRate) {
+            later = false;
+            return null;
+        }
+        return list[fidx];
+    }
+
+}
+
+
+
 const ans = {
     micro: genTrendInfo(true),
-    macro: genTrendInfo(false),
+    macro: genTrendInfo(false, macroAmplitudeFilter),
     last: {
         time: firstKey,
         val: rMap[firstKey]
