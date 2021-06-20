@@ -14,14 +14,14 @@ let keys = Object.keys(rMap);
 keys = keys.reverse();
 const firstKey = keys[0];
 
-function listMinMax(micro) {
+function listMinMax(micro, filter = null) {
     let ans = {
         min: [],
         max: [],
-        all:[]
+        all: []
     };
     for (let i = 0; i < keys.length; i++) {
-        let mmr = findMinOrMax(i,micro);
+        let mmr = findMinOrMax(i, micro);
         let info = genMinMax(i)
         if (mmr == MINED) {
             ans.min.push(info);
@@ -31,6 +31,7 @@ function listMinMax(micro) {
             ans.all.push(info);
         }
     }
+    if (filter) ans = filter(ans);
     return ans;
 }
 
@@ -59,7 +60,7 @@ function genMinMax(i) {
     };
 }
 
-function mapInfos(listi){
+function mapInfos(listi) {
     let ans = {};
     for (const e of listi) {
         ans[e.dtime] = e;
@@ -67,19 +68,19 @@ function mapInfos(listi){
     return ans;
 }
 
-function getVal(key){
-    return rMap[key] -baseVal ;
+function getVal(key) {
+    return rMap[key] - baseVal;
 }
 
-function isBoundary(timeSize,idx,micro,forward){
-    if(idx<0) return true;
-    if(idx >= keys.length) return true;
-    if(micro && timeSize > peakMaxWaitSeconds) return true;
-    if(micro) return false;
-    let nidx = forward ? idx-1 : idx +1;
-    if(nidx<0) return true;
-    if(nidx >= keys.length) return true;   
-    let cv = getVal(keys[idx]) ;
+function isBoundary(timeSize, idx, micro, forward) {
+    if (idx < 0) return true;
+    if (idx >= keys.length) return true;
+    if (micro && timeSize > peakMaxWaitSeconds) return true;
+    if (micro) return false;
+    let nidx = forward ? idx - 1 : idx + 1;
+    if (nidx < 0) return true;
+    if (nidx >= keys.length) return true;
+    let cv = getVal(keys[idx]);
     let nv = getVal(keys[nidx]);
     return nv * cv < 0;
 }
@@ -95,13 +96,13 @@ function findMinOrMax(idx, micro) {
         let nk = keys[idx];
         let nv = getVal(nk);
         let timeSize = Math.abs(subtractKey(curKey, nk));
-        if ( isBoundary(timeSize,idx,micro,forward) ) {
+        if (isBoundary(timeSize, idx, micro, forward)) {
             if (forward) {
                 idx = curIdx;
                 forward = false;
                 continue;
             }
-            
+
             break;
         }
         if (maxed) {
@@ -127,8 +128,8 @@ function genTrendInfo(micro) {
     const minMaxInfo = listMinMax(micro);
     const nearMax = getNearInfo(minMaxInfo.max);
     const nearMin = getNearInfo(minMaxInfo.min);
-    const maxNearTime = nearMax ? subtractKey(firstKey, nearMax.key):Number.MAX_SAFE_INTEGER;
-    const minNearTime = nearMin ? subtractKey(firstKey, nearMin.key):Number.MAX_SAFE_INTEGER;
+    const maxNearTime = nearMax ? subtractKey(firstKey, nearMax.key) : Number.MAX_SAFE_INTEGER;
+    const minNearTime = nearMin ? subtractKey(firstKey, nearMin.key) : Number.MAX_SAFE_INTEGER;
     console.log(nearMax);
     console.log(nearMin);
     const state = calcState();
@@ -164,11 +165,11 @@ function genTrendInfo(micro) {
 }
 
 const ans = {
-    micro : genTrendInfo(true),
+    micro: genTrendInfo(true),
     macro: genTrendInfo(false),
-    last:{
-        time:firstKey,
-        val:rMap[firstKey]
+    last: {
+        time: firstKey,
+        val: rMap[firstKey]
     }
 }
 
