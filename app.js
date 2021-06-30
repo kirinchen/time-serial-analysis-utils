@@ -1,7 +1,7 @@
-const rMap = require('./serial-test-data').data;
-let baseVal = require('./serial-test-data').baseVal;
+const rMap = require('./serial-test-data-little-peak').data;
+let baseVal = require('./serial-test-data-little-peak').baseVal;
 const peakMaxWaitSeconds = 60 * 60 * 2;
-const macroAmplitudeRate = 0.2;
+const macroAmplitudeRate = 0;
 
 baseVal = baseVal ? baseVal : 0;
 const STATE_RISE = 'RISE';
@@ -230,10 +230,7 @@ function listAmplitudeSmall(idx, list) {
         }
         return list[fidx];
     }
-
 }
-
-
 
 const ans = {
     micro: genTrendInfo(true),
@@ -243,7 +240,5 @@ const ans = {
         val: rMap[firstKey]
     }
 }
-
-console.log(ans);
 
 ans;
