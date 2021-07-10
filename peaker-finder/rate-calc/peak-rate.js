@@ -10,7 +10,7 @@ const pos = getPos();
 function getH() {
     if (state == 'FALL') return Math.abs(macro.nearMin.val);
     if (state == 'RISE') return Math.abs(macro.nearMax.val);
-    throw new Error('not support ' + state);
+    throw new Error('getH not support ' + state);
 }
 
 function getPos() {
@@ -28,13 +28,13 @@ function getPos() {
             return lastV >= halfH ? E : F;
         }
     }
-    throw new Error('not support ' + state + ' v:' + lastV);
+    throw new Error('getPos not support ' + state + ' v:' + lastV);
 }
 
-function calcInvestRate() {
-    if (state == 'FALL') return lastV / h;
-    if (state == 'RISE') return -lastV / h;
-    throw new Error('not support ' + state + ' v:' + lastV);
+function calcInvestRate(sb) {
+    if (sb == 'SELL') return lastV / h;
+    if (sb == 'BUY') return -lastV / h;
+    throw new Error('calcInvestRate not support ' + state + ' v:' + lastV);
 }
 
 function calcMiddleGroudRate() {
@@ -49,25 +49,31 @@ function calcLongGroudRate() {
     return Math.pow(0.5, p);
 }
 
-function calcGroudRate() {
+function calcGroudRate(sb) {
     switch (pos) {
-        case A: return state == 'RISE' ? calcMiddleGroudRate() : calcLongGroudRate();
-        case B: return state == 'RISE' ? calcMiddleGroudRate() : 0;
-        case C: return state == 'RISE' ? calcMiddleGroudRate() : 0;
-        case D: return state == 'RISE' ? calcMiddleGroudRate() : calcLongGroudRate();
-        case E: return state == 'RISE' ? calcLongGroudRate() : calcMiddleGroudRate();
-        case F: return state == 'RISE' ? 0 : calcMiddleGroudRate();
-        case G: return state == 'RISE' ? 0 : calcMiddleGroudRate();
-        case G: return state == 'RISE' ? calcLongGroudRate() : calcMiddleGroudRate();
+        case A: return sb == 'BUY' ? calcMiddleGroudRate() : calcLongGroudRate();
+        case B: return sb == 'BUY' ? calcMiddleGroudRate() : 0;
+        case C: return sb == 'BUY' ? calcMiddleGroudRate() : 0;
+        case D: return sb == 'BUY' ? calcMiddleGroudRate() : calcLongGroudRate();
+        case E: return sb == 'BUY' ? calcLongGroudRate() : calcMiddleGroudRate();
+        case F: return sb == 'BUY' ? 0 : calcMiddleGroudRate();
+        case G: return sb == 'BUY' ? 0 : calcMiddleGroudRate();
+        case H: return sb == 'BUY' ? calcLongGroudRate() : calcMiddleGroudRate();
     }
-    throw new Error('not support ' + state + ' v:' + lastV);
+    throw new Error('not support ' + state + ' v:' + lastV+ 'POS:'+pos);
 
 }
 
 function calc() {
     return {
-        'investRate': calcInvestRate(),
-        'groudRate': calcGroudRate(),
+        'SELL':{
+            'investRate': calcInvestRate('SELL'),
+            'groudRate': calcGroudRate('SELL'),
+        },
+        'BUY':{
+            'investRate': calcInvestRate('BUY'),
+            'groudRate': calcGroudRate('BUY'),
+        },
         'pos': pos,
         'h': h,
         'lastv': lastV,
