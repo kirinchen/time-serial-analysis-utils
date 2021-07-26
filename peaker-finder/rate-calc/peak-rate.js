@@ -1,4 +1,4 @@
-const rf = require('../app').ans;
+const rf = require('../peaker-finder').ans;
 const macro = rf.macro;
 const state = rf.macro.state;
 const lastV = rf.last.val;
